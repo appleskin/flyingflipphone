@@ -5,7 +5,9 @@ const STATE = {
 	GROUNDED: 'grounded'
 };
 
-const SCALE = 1.5;
+const SCALE = 1;
+const SPEED = 8;
+const JUMP_FORCE = 15;
 
 class Phone extends Actor {
 
@@ -13,11 +15,8 @@ class Phone extends Actor {
 		super(game, x, y, 'phone', frame);
 
 		this.state = STATE.GROUNDED;
-		this.speed = 14;
-		this.jumpForce = 30;
-
 		this.anchor.setTo( .5,.5 );
-		this.scale.setTo( SCALE, SCALE );
+		this.scale.setTo( -SCALE, SCALE );
 
 		this.initInput();
 
@@ -45,7 +44,7 @@ class Phone extends Actor {
 				this.body.velocity.x = 0;
 			}
 
-			this.body.velocity.x -= this.speed;
+			this.body.velocity.x -= SPEED;
 			this.scale.setTo( SCALE, SCALE );
 		}
 
@@ -54,12 +53,12 @@ class Phone extends Actor {
 				this.body.velocity.x = 0;
 			}
 
-			this.body.velocity.x += this.speed;
+			this.body.velocity.x += SPEED;
 			this.scale.setTo( -SCALE, SCALE );
 		}
 
 		if( this.input.space.isDown || this.input.w.isDown ) {
-			this.body.velocity.y -= this.jumpForce;
+			this.body.velocity.y -= JUMP_FORCE;
 		}
 	}
 
