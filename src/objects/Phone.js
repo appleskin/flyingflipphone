@@ -5,7 +5,7 @@ const STATE = {
 	GROUNDED: 'grounded'
 };
 
-const SCALE = 1.5;
+const SCALE = 1;
 const SPEED = 8;
 const JUMP_FORCE = 15;
 const MAX_CHARGE = 200;
@@ -23,8 +23,7 @@ class Phone extends Actor {
 		this.battery = MAX_CHARGE;
 
 		// compensate for anchor
-		this.x += 25;
-		this.y -= 50;
+		this.x += 15;
 
 		this.initInput();
 
@@ -38,6 +37,10 @@ class Phone extends Actor {
 	    	s: this.game.input.keyboard.addKey(Phaser.Keyboard.S),
 	    	d: this.game.input.keyboard.addKey(Phaser.Keyboard.D),
 	    	space: this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
+	    };
+
+	    this.input.destroy = () => {
+	    	this.input = null;
 	    };
 	}
 

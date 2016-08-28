@@ -6,16 +6,20 @@ import Note from 'objects/note';
 import Levels from 'levels/levels.json';
 
 const UNITS = {
-	AOL: 1,
-	EXCITE: 2,
-	GEOCITIES: 3,
-	MYSPACE: 4,
-	NETZERO: 5,
-	XEROX: 6,
 	PHONE: 10,
 	USB: 8,
-	NOTE: 9
+	NOTE: 9,
+	BLOCK: 1
 };
+
+const TECH = [
+	'aol',
+	'excite',
+	'geocities',
+	'myspace',
+	'netzero',
+	'xerox'
+];
 
 class GameState extends Phaser.State {
 
@@ -25,7 +29,7 @@ class GameState extends Phaser.State {
 		this.loadImages();
 		this.loadAudio();
 
-		this.level = 1;
+		this.notesCollected = 0;
 		this.groups = {};
 	}
 
@@ -54,7 +58,11 @@ class GameState extends Phaser.State {
 
 		this.initPhysics();
 		this.initSounds();
-		this.loadLevel( this.level );
+		this.loadLevel( this.getLevelNumber() );
+	}
+
+	getLevelNumber() {
+		return -1;
 	}
 
 	initPhysics() {
@@ -90,32 +98,16 @@ class GameState extends Phaser.State {
 	addObstacleGroup( mapLoader ) {
 		this.groups.obstacles = this.game.add.group();
 
-		let ids = [ UNITS.AOL, UNITS.EXCITE, UNITS.GEOCITIES, UNITS.MYSPACE, UNITS.NETZERO, UNITS.XEROX ];
-		
-		let spriteKey = this.getSpriteKeyById( 1 );
+		let spriteKey = this.getSpriteKeyById( this.getLevelNumber() );
 
-		ids.forEach( id => {
-			let obstacles = mapLoader.getUnitsById( id );
-			obstacles.forEach( obs => {
-				this.groups.obstacles.add( new Obstacle(this.game, obs.x, obs.y, spriteKey) );
-			});
+		let obstacles = mapLoader.getUnitsById( UNITS.BLOCK );
+		obstacles.forEach( obs => {
+			this.groups.obstacles.add( new Obstacle(this.game, obs.x, obs.y, spriteKey) );
 		});
 	}
 
 	getSpriteKeyById( level_num ) {
-		if( level_num === UNITS.AOL ) {
-			return 'aol';
-		} else if( level_num === UNITS.EXCITE ) {
-			return 'excite';
-		} else if( level_num === UNITS.GEOCITIES ) {
-			return 'geocities';
-		} else if( level_num === UNITS.MYSPACE ) {
-			return 'myspace';
-		} else if( level_num === UNITS.NETZERO ) {
-			return 'netzero';
-		} else if( level_num === UNITS.XEROX ) {
-			return 'xerox';
-		}
+		return TECH[ level_num-1 ];
 	}
 
 	addNotesGroup( mapLoader ) {
@@ -140,33 +132,25 @@ class GameState extends Phaser.State {
 
 	update() {
 		this.game.physics.arcade.collide(this.groups.player, this.groups.obstacles);
-		this.game.physics.arcade.collide(this.groups.player, this.groups.usb, (p,u) => { u.collideWithPlayer(p,u,this.sounds); } );
-		this.game.physics.arcade.overlap(this.groups.player, this.groups.notes, (p,n) => { n.collideWithPlayer(p,n,this.sounds); } );
+		
+		this.game.physics.arcade.collide(this.groups.player, this.groups.usb, (p,u) => {
+			u.collideWithPlayer(p,u,this.sounds);
+		});
+		
+		this.game.physics.arcade.overlap(this.groups.player, this.groups.notes, (p,n) => {
+			n.collideWithPlayer(p,n,this.sounds);
 
-		if( this.level ) {
-			this.checkLevelWin();
-		}
+			this.notesCollected++;
+			if( this.notesCollected >= 4 ) {
+				let nextLevel = `Level${this.getLevelNumber() + 1}`;
+				this.game.state.start( nextLevel );
+			}
+		});
 	}
 
 	render() {
 		//this.game.debug.body( this.groups.player.children[0] );
 		this.game.debug.text( `Battery Power: ${this.groups.player.children[0].battery}`, 70, 70 );
-	}
-
-	checkLevelWin() {
-		// let numNotes = this.groups.notes.children.reduce( (prev,curr) => {
-		// 	//if( curr.isAwake ) {
-		// 		return prev++;
-		// 	//}
-		// }, 0);
-
-		// console.log( numNotes );
-
-		// if( numNotes === 0 ) {
-		// 	this.level++;
-
-		// 	this.loadLevel( this.level );
-		// }
 	}
 }
 
