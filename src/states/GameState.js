@@ -41,6 +41,7 @@ class GameState extends Phaser.State {
 		this.game.load.image('note', 'assets/note.png');
 		this.game.load.image('bg', 'assets/bgs/bg.png');
 		this.game.load.image('box', 'assets/box.png');
+		this.game.load.image('smoke', 'assets/smoke.png');
 
 		this.game.load.image('aol', 'assets/companies/aol.png');
 		this.game.load.image('excite', 'assets/companies/excite.png');
@@ -54,6 +55,7 @@ class GameState extends Phaser.State {
 		this.game.load.audio('airwaves', 'assets/air_waves.mp3');
 		this.game.load.audio('charge', 'assets/charge.wav');
 		this.game.load.audio('hurt', 'assets/hurt.wav');
+		this.game.load.audio('boost', 'assets/boost.mp3');
 	}
 
 	create() {
@@ -74,11 +76,14 @@ class GameState extends Phaser.State {
 	}
 
 	initSounds() {
-		this.sounds = {
+		this.game.sounds = {
 			airwaves: this.game.add.audio('airwaves'),
 			charge: this.game.add.audio('charge'),
-			hurt: this.game.add.audio('hurt')
+			hurt: this.game.add.audio('hurt'),
+			boost: this.game.add.audio('boost')
 		};
+
+		this.game.sounds.boost.volume = 0.2;
 	}
 
 	loadLevel( level_num ) {
@@ -149,7 +154,7 @@ class GameState extends Phaser.State {
 					n.kill();
 				}, duration );
 
-				this.sounds.airwaves.play();
+				this.game.sounds.airwaves.play();
 			}
 
 			if( this.notesCollected >= 4 && !p.dancing ) {
@@ -163,7 +168,7 @@ class GameState extends Phaser.State {
 		});
 
 		this.game.physics.arcade.collide(this.groups.player, this.groups.usb, (p,u) => {
-			u.collideWithPlayer(p,u,this.sounds);
+			u.collideWithPlayer(p,u,this.game.sounds);
 		});
 
 		this.game.physics.arcade.collide(this.groups.player, this.groups.obstacles, (p,o) => {
@@ -177,7 +182,7 @@ class GameState extends Phaser.State {
 	restartLevel(p) {
 		if( !this.game.restarting ) {
 			this.restarting = true;
-			this.sounds.hurt.play();
+			this.game.sounds.hurt.play();
 
 			p.body.allowGravity = false;
 			p.body.velocity.setTo( 0, 0 );
@@ -203,6 +208,11 @@ class GameState extends Phaser.State {
 			this.game.debug.text( `Battery Power: ${this.groups.player.children[0].battery}`, 10, 15 );
 			this.game.debug.text( `Deaths: ${this.game.getDeaths()}`, 10, 30 );
 			this.game.debug.text( `Time: ${this.game.getTime()}s`, 10, 45 );
+
+			this.game.debug.text( `Level: ${this.getLevelNumber()}`, 620, 15)
+			let numNotes = ((this.getLevelNumber()-1) * 4) + this.notesCollected;
+			this.game.debug.text( `Ringtones: ${numNotes} / 24`, 620, 30 );
+
 			this.game.debug.text( `Controls: W,A,S,D`, 10, 580 );
 		}
 	}

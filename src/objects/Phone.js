@@ -32,6 +32,11 @@ class Phone extends Actor {
 		// compensate for anchor
 		this.x += 15;
 
+    	this.emitter = this.game.add.emitter(0, 0, 200);
+    	this.emitter.makeParticles('smoke');
+    	this.emitter.setScale(1, 2.5, 1, 2.5, 6000, Phaser.Easing.Quintic.Out);
+    	this.emitter.gravity = -600;
+
 		this.initInput();
 
 		this.game.stage.addChild(this);
@@ -81,9 +86,19 @@ class Phone extends Actor {
 		let boosting = this.input.space.isDown || this.input.w.isDown;
 		let canBoost = this.battery > 0;
 		if( boosting && canBoost ) {
+			this.emitSmoke();
+			if( !this.game.sounds.boost.isPlaying ) {
+				this.game.sounds.boost.play();
+			}
 			this.battery -= 1;
 			this.body.velocity.y -= JUMP_FORCE;
 		}
+	}
+
+	emitSmoke() {
+		this.emitter.x = this.body.x + this.body.width/2;
+		this.emitter.y = this.body.y + this.body.height + 5;
+		this.emitter.start(true, 3000, null, 1);
 	}
 
 	handleState() {
