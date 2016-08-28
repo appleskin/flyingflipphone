@@ -5,9 +5,12 @@ const STATE = {
 	GROUNDED: 'grounded'
 };
 
-const SCALE = 1;
+const SCALE = 1.5;
 const SPEED = 8;
 const JUMP_FORCE = 15;
+const MAX_CHARGE = 200;
+const CHARGE_RATE = 1;
+const DISCHARGE_RATE = 1;
 
 class Phone extends Actor {
 
@@ -17,6 +20,11 @@ class Phone extends Actor {
 		this.state = STATE.GROUNDED;
 		this.anchor.setTo( .5,.5 );
 		this.scale.setTo( -SCALE, SCALE );
+		this.battery = MAX_CHARGE;
+
+		// compensate for anchor
+		this.x += 25;
+		this.y -= 50;
 
 		this.initInput();
 
@@ -36,6 +44,7 @@ class Phone extends Actor {
 	update() {
 		this.handleInput();
 		this.handleState();
+		this.normalize();
 	}
 
 	handleInput() {
@@ -57,7 +66,10 @@ class Phone extends Actor {
 			this.scale.setTo( -SCALE, SCALE );
 		}
 
-		if( this.input.space.isDown || this.input.w.isDown ) {
+		let boosting = this.input.space.isDown || this.input.w.isDown;
+		let canBoost = this.battery > 0;
+		if( boosting && canBoost ) {
+			this.battery -= 1;
 			this.body.velocity.y -= JUMP_FORCE;
 		}
 	}
@@ -68,6 +80,39 @@ class Phone extends Actor {
 		} else {
 			this.state = STATE.GROUNDED;
 		}
+	}
+
+	normalize() {
+		this.normalizeBattery();
+	}
+
+	normalizeBattery() {
+		if( this.battery < 0 ) {
+			this.battery = 0;
+		}
+
+		if( this.battery > MAX_CHARGE ) {
+			this.battery = MAX_CHARGE;
+		}
+	}
+
+	isPressingButtons() {
+		let inputKeys = Object.keys( this.input );
+		inputKeys.forEach( key => {
+			if( this.input[key].isDown ) {
+				return true;
+			}
+		});
+
+		return false;
+	}
+
+	getChargeRate() {
+		return CHARGE_RATE;
+	}
+
+	getMaxCharge() {
+		return MAX_CHARGE;
 	}
 }
 
