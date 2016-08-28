@@ -30,27 +30,30 @@ class GameState extends Phaser.State {
 		this.loadAudio();
 
 		this.notesCollected = 0;
+		this.restarting = false;
 		this.groups = {};
 	}
 
 	loadImages() {
-		this.game.load.image('phone', '../assets/phone.png');
-		this.game.load.image('usb', '../assets/usb.png');
-		this.game.load.image('note', '../assets/note.png');
-		this.game.load.image('bg', '../assets/bgs/bg.png');
+		this.game.load.spritesheet('phone', 'assets/phone-atlas.png', 50, 100);
 
+		this.game.load.image('usb', 'assets/usb.png');
+		this.game.load.image('note', 'assets/note.png');
+		this.game.load.image('bg', 'assets/bgs/bg.png');
+		this.game.load.image('box', 'assets/box.png');
 
-		this.game.load.image('aol', '../assets/companies/aol.png');
-		this.game.load.image('excite', '../assets/companies/excite.png');
-		this.game.load.image('geocities', '../assets/companies/geocities.png');
-		this.game.load.image('myspace', '../assets/companies/myspace.png');
-		this.game.load.image('netzero', '../assets/companies/netzero.png');
-		this.game.load.image('xerox', '../assets/companies/xerox.png');
+		this.game.load.image('aol', 'assets/companies/aol.png');
+		this.game.load.image('excite', 'assets/companies/excite.png');
+		this.game.load.image('geocities', 'assets/companies/geocities.png');
+		this.game.load.image('myspace', 'assets/companies/myspace.png');
+		this.game.load.image('netzero', 'assets/companies/netzero.png');
+		this.game.load.image('xerox', 'assets/companies/xerox.png');
 	}
 
 	loadAudio() {
-		this.game.load.audio('airwaves', '../assets/air_waves.mp3');
-		this.game.load.audio('charge', '../assets/charge.wav');
+		this.game.load.audio('airwaves', 'assets/air_waves.mp3');
+		this.game.load.audio('charge', 'assets/charge.wav');
+		this.game.load.audio('hurt', 'assets/hurt.wav');
 	}
 
 	create() {
@@ -73,7 +76,8 @@ class GameState extends Phaser.State {
 	initSounds() {
 		this.sounds = {
 			airwaves: this.game.add.audio('airwaves'),
-			charge: this.game.add.audio('charge')
+			charge: this.game.add.audio('charge'),
+			hurt: this.game.add.audio('hurt')
 		};
 	}
 
@@ -102,7 +106,7 @@ class GameState extends Phaser.State {
 
 		let obstacles = mapLoader.getUnitsById( UNITS.BLOCK );
 		obstacles.forEach( obs => {
-			this.groups.obstacles.add( new Obstacle(this.game, obs.x, obs.y, spriteKey) );
+			this.groups.obstacles.add( new Obstacle(this.game, obs.x, obs.y, 'box') );
 		});
 	}
 
@@ -131,26 +135,76 @@ class GameState extends Phaser.State {
 	}
 
 	update() {
-		this.game.physics.arcade.collide(this.groups.player, this.groups.obstacles);
-		
+		this.game.physics.arcade.overlap(this.groups.player, this.groups.notes, (p,n) => {
+			if( !n.dancing ) {
+				this.notesCollected++;
+
+				n.dancing = true;
+
+				let duration = 2000;
+				this.game.add.tween(n).to( { angle: 360 }, duration, Phaser.Easing.Linear.None, true);
+				this.game.add.tween(n.scale).to( { x: 0.25, y: 0.25 }, duration, Phaser.Easing.Linear.None, true);
+
+				setTimeout( () => {
+					n.kill();
+				}, duration );
+
+				this.sounds.airwaves.play();
+			}
+
+			if( this.notesCollected >= 4 && !p.dancing ) {
+				p.dance();
+
+				setTimeout( () => {
+					let nextLevel = `Level${this.getLevelNumber() + 1}`;
+					this.game.state.start( nextLevel );
+				}, 3000 );
+			}
+		});
+
 		this.game.physics.arcade.collide(this.groups.player, this.groups.usb, (p,u) => {
 			u.collideWithPlayer(p,u,this.sounds);
 		});
-		
-		this.game.physics.arcade.overlap(this.groups.player, this.groups.notes, (p,n) => {
-			n.collideWithPlayer(p,n,this.sounds);
 
-			this.notesCollected++;
-			if( this.notesCollected >= 4 ) {
-				let nextLevel = `Level${this.getLevelNumber() + 1}`;
-				this.game.state.start( nextLevel );
+		this.game.physics.arcade.collide(this.groups.player, this.groups.obstacles, (p,o) => {
+			if( !p.dancing ) {
+				p.frame = 1;
+				this.restartLevel(p);
 			}
 		});
 	}
 
+	restartLevel(p) {
+		if( !this.game.restarting ) {
+			this.restarting = true;
+			this.sounds.hurt.play();
+
+			p.body.allowGravity = false;
+			p.body.velocity.setTo( 0, 0 );
+			p.dancing = true;
+
+			let duration = 2000;
+			this.game.add.tween(p.scale).to( { x: 0.25, y: 0.25 }, duration, Phaser.Easing.Linear.None, true);
+
+			setTimeout( () => {
+				this.game.tallyDeath();
+				this.game.state.start(`Level${this.getLevelNumber()}`,true);	
+			}, duration );
+		}
+
+	}
+
 	render() {
-		//this.game.debug.body( this.groups.player.children[0] );
-		this.game.debug.text( `Battery Power: ${this.groups.player.children[0].battery}`, 70, 70 );
+		if( this.getLevelNumber() === 7 ) {
+			this.game.debug.text( `End`, 300, 200 );
+			this.game.debug.text( `Deaths: ${this.game.getDeaths()}`, 300, 215 );
+			this.game.debug.text( `Time: ${this.game.getFinalTime()}s`, 300, 230 );
+		} else {
+			this.game.debug.text( `Battery Power: ${this.groups.player.children[0].battery}`, 10, 15 );
+			this.game.debug.text( `Deaths: ${this.game.getDeaths()}`, 10, 30 );
+			this.game.debug.text( `Time: ${this.game.getTime()}s`, 10, 45 );
+			this.game.debug.text( `Controls: W,A,S,D`, 10, 580 );
+		}
 	}
 }
 

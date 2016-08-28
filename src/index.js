@@ -5,6 +5,7 @@ import Level3 from 'states/Level3';
 import Level4 from 'states/Level4';
 import Level5 from 'states/Level5';
 import Level6 from 'states/Level6';
+import Win from 'states/Win';
 
 class Game extends Phaser.Game {
 
@@ -17,10 +18,39 @@ class Game extends Phaser.Game {
 		this.state.add('Level4', Level4, false);
 		this.state.add('Level5', Level5, false);
 		this.state.add('Level6', Level6, false);
+		this.state.add('Level7', Win, false);
 
-		this.state.start('Level3');
+		this.finalTime = null;
+		this.deaths = 0;
+
+		this.state.start('Level5');
 	}
 
+	tallyDeath() {
+		this.deaths++;
+	}
+
+	getTime() {
+		return this.round(this.time.totalElapsedSeconds(), 2);
+	}
+
+	getFinalTime() {
+		if( !this.finalTime ) {
+			this.finalTime = this.getTime();	
+		}
+		return this.finalTime;
+	}
+
+	getDeaths() {
+		return this.deaths;
+	}
+
+	round( number, precision ) {
+	    var factor = Math.pow(10, precision);
+	    var tempNumber = number * factor;
+	    var roundedTempNumber = Math.round(tempNumber);
+	    return roundedTempNumber / factor;
+	};
 }
 
 new Game();

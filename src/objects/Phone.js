@@ -5,6 +5,12 @@ const STATE = {
 	GROUNDED: 'grounded'
 };
 
+const FRAMES = {
+	DEFAULT: 0,
+	CHARGING: 1,
+	CLOSED: 2
+};
+
 const SCALE = 1;
 const SPEED = 8;
 const JUMP_FORCE = 15;
@@ -15,12 +21,13 @@ const DISCHARGE_RATE = 1;
 class Phone extends Actor {
 
 	constructor(game, x, y, key, frame) {
-		super(game, x, y, 'phone', frame);
+		super(game, x, y, 'phone', FRAMES.DEFAULT);
 
 		this.state = STATE.GROUNDED;
 		this.anchor.setTo( .5,.5 );
 		this.scale.setTo( -SCALE, SCALE );
 		this.battery = MAX_CHARGE;
+		this.dancing = false;
 
 		// compensate for anchor
 		this.x += 15;
@@ -45,6 +52,8 @@ class Phone extends Actor {
 	}
 
 	update() {
+		if( this.dancing ) return;
+
 		this.handleInput();
 		this.handleState();
 		this.normalize();
@@ -94,8 +103,12 @@ class Phone extends Actor {
 			this.battery = 0;
 		}
 
-		if( this.battery > MAX_CHARGE ) {
+		if( this.battery >= MAX_CHARGE ) {
 			this.battery = MAX_CHARGE;
+		}
+
+		if( this.state !== STATE.GROUNDED ) {
+			this.frame = FRAMES.DEFAULT;
 		}
 	}
 
@@ -108,6 +121,28 @@ class Phone extends Actor {
 		});
 
 		return false;
+	}
+
+	dance() {
+		this.dancing = true;
+
+		this.body.allowGravity = false;
+		this.body.velocity.setTo( 0, 0 );
+
+		this.frame = FRAMES.CLOSED;
+
+		let duration = 3000;
+		this.anchor.setTo( 0.5, 0.75 );
+		this.game.add.tween(this).to( { angle: 360 }, duration, Phaser.Easing.Linear.None, true);
+		this.game.add.tween(this.scale).to( { x: 5, y: 5 }, duration, Phaser.Easing.Linear.None, true);
+	}
+
+	updateChargeFrame() {
+		if( this.battery < MAX_CHARGE ) {
+			this.frame = FRAMES.CHARGING;
+		} else {
+			this.frame = FRAMES.DEFAULT;
+		}
 	}
 
 	getChargeRate() {

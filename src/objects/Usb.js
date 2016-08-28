@@ -18,6 +18,9 @@ class Usb extends Actor {
 	}
 
 	chargePhone( player, sounds ) {
+		player.updateChargeFrame();
+
+
 		if( !player.isPressingButtons() ) {
 			player.body.velocity.y = 0;	
 			player.body.velocity.x = 0;
