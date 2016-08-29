@@ -7,6 +7,7 @@ class Usb extends Actor {
 
 		this.body.allowGravity = false;
 		this.body.immovable = true;
+		//this.body.friction = 0;
 
 		//this.scale.setTo( 0.5, 0.5 );
 

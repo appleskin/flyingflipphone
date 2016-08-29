@@ -29,6 +29,8 @@ class Phone extends Actor {
 		this.battery = MAX_CHARGE;
 		this.dancing = false;
 
+		this.body.setSize( 35, 90, 7, 8 );
+
 		// compensate for anchor
 		this.x += 15;
 
@@ -144,7 +146,7 @@ class Phone extends Actor {
 		this.body.allowGravity = false;
 		this.body.velocity.setTo( 0, 0 );
 
-		this.frame = FRAMES.CLOSED;
+		this.frame = FRAMES.CHARGING;
 
 		let duration = 3000;
 		this.anchor.setTo( 0.5, 0.75 );

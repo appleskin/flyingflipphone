@@ -83,7 +83,10 @@ class GameState extends Phaser.State {
 			boost: this.game.add.audio('boost')
 		};
 
-		this.game.sounds.boost.volume = 0.2;
+		this.game.sounds.airwaves.volume = 0.1;
+		this.game.sounds.charge.volume = 0.1;
+		this.game.sounds.hurt.volume = 0.2;
+		this.game.sounds.boost.volume = 0.1;
 	}
 
 	loadLevel( level_num ) {
@@ -173,7 +176,7 @@ class GameState extends Phaser.State {
 
 		this.game.physics.arcade.collide(this.groups.player, this.groups.obstacles, (p,o) => {
 			if( !p.dancing ) {
-				p.frame = 1;
+				p.frame = 2;
 				this.restartLevel(p);
 			}
 		});

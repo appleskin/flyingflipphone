@@ -23,7 +23,7 @@ class Game extends Phaser.Game {
 		this.finalTime = null;
 		this.deaths = 0;
 
-		this.state.start('Level5');
+		this.state.start('Level1');
 	}
 
 	tallyDeath() {
